@@ -11,6 +11,8 @@ Installation
 Usage
 =====
 
+For the moment you need a config.py with 2 var USERNAME and PASSWORD. This sucks and need to be changed.
+
 List repos:
 
     bb list  # fancy color when a repos is private
