@@ -23,13 +23,13 @@ def list():
         yield to_print
 
 
-def create(private=True, scm="git", *names):
+def create(public=False, scm="git", *names):
     if not names:
         names = [path.split(path.realpath(path.curdir))[1]]
 
     for name in names:
         bb = auth()
-        bb.repository.create(name, private=private, scm=scm)
+        bb.repository.create(name, private=not public, scm=scm)
         yield "Home page: https://bitbucket.org/%s/%s\n" % (USERNAME, name)
         yield "git remote add origin ssh://hg@bitbucket.org/%s/%s" % (USERNAME, name)
         yield "git push -u origin master"
