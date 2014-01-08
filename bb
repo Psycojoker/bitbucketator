@@ -1,14 +1,42 @@
 #!/usr/bin/env python
 
 import argh
+import json
+import webbrowser
 from os import path
 from bitbucket.bitbucket import Bitbucket
 
-from config import USERNAME, PASSWORD
+
+CONSUMER_KEY = "z9JNhcdLM9xxKHjt7U"
+CONSUMER_SECRET = "DD84zc9tBnwaNPM7jsvhXAH8VEbWRPwm"
 
 
 def auth():
-    return Bitbucket(USERNAME, PASSWORD)
+    if not path.exists(path.expanduser("~/.bitbucketatorrc")):
+        data = {}
+        username = raw_input('Username: ')
+        data["username"] = username
+        bb = Bitbucket(username)
+        # First time we need to open up a browser to enter the verifier
+        bb.authorize(CONSUMER_KEY, CONSUMER_SECRET, 'http://localhost/')
+        # open a webbrowser and get the token
+        webbrowser.open(bb.url('AUTHENTICATE', token=bb.access_token))
+        # Copy the verifier field from the URL in the browser into the console
+        oauth_verifier = raw_input('Enter verifier from url [oauth_verifier] (find it in the broken url arguments, yes that sucks')
+        bb.verify(oauth_verifier)
+        OAUTH_ACCESS_TOKEN = bb.access_token
+        OAUTH_ACCESS_TOKEN_SECRET = bb.access_token_secret
+        data["OAUTH_ACCESS_TOKEN"] = OAUTH_ACCESS_TOKEN
+        data["OAUTH_ACCESS_TOKEN_SECRET"] = OAUTH_ACCESS_TOKEN_SECRET
+        json.dump(data, open(path.expanduser("~/.bitbucketatorrc"), "w"))
+
+    else:
+        data = json.load(open(path.expanduser("~/.bitbucketatorrc")))
+        bb = Bitbucket(data["username"])
+
+    bb.authorize(CONSUMER_KEY, CONSUMER_SECRET, 'http://localhost/', data["OAUTH_ACCESS_TOKEN"], data["OAUTH_ACCESS_TOKEN_SECRET"])
+
+    return bb
 
 
 def list(scm_url=False):
@@ -19,9 +47,9 @@ def list(scm_url=False):
             to_print += "\033[0;35m"
         to_print += " %-28s" % i["name"]
         if scm_url:
-            to_print += "ssh://hg@bitbucket.org/%s/%s" % (USERNAME, i["name"])
+            to_print += "ssh://hg@bitbucket.org/%s/%s" % (bb.username, i["name"])
         else:
-            to_print += "https://bitbucket.org/%s/%s" % (USERNAME, i["name"])
+            to_print += "https://bitbucket.org/%s/%s" % (bb.username, i["name"])
         to_print += "\033[0m"
         yield to_print
 
@@ -33,13 +61,13 @@ def create(public=False, scm="git", *names):
     for name in names:
         bb = auth()
         bb.repository.create(name, private=not public, scm=scm)
-        yield "Home page: https://bitbucket.org/%s/%s\n" % (USERNAME, name)
+        yield "Home page: https://bitbucket.org/%s/%s\n" % (bb.username, name)
         if scm == "git":
-            yield "git remote add origin ssh://hg@bitbucket.org/%s/%s" % (USERNAME, name)
+            yield "git remote add origin ssh://hg@bitbucket.org/%s/%s" % (bb.username, name)
             yield "git push -u origin master"
         else:
             yield "edit .hg/hgrc to add the repos then push"
-            yield "hg push ssh://hg@bitbucket.org/%s/%s" % (USERNAME, name)
+            yield "hg push ssh://hg@bitbucket.org/%s/%s" % (bb.username, name)
 
 
 parser = argh.ArghParser()
