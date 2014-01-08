@@ -6,7 +6,7 @@ Quick and dirty CLI client arround (well, nearly nothing for the moment) BitBuck
 Installation
 ============
 
-    pip install git+https://github.com/Psycojoker/bitbucketator.git
+    pip install bb
 
 Usage
 =====
