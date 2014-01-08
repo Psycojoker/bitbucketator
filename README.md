@@ -14,6 +14,7 @@ Usage
 List repos:
 
     bb list  # fancy color when a repos is private
+    bb list -s  # display scm (git/hg) url instead of http url
 
 Create repos:
 
