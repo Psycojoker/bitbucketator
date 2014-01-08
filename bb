@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argh
+from os import path
 from bitbucket.bitbucket import Bitbucket
 
 from config import USERNAME, PASSWORD
@@ -22,8 +23,20 @@ def list():
         yield to_print
 
 
+def create(private=True, scm="git", *names):
+    if not names:
+        names = [path.split(path.realpath(path.curdir))[1]]
+
+    for name in names:
+        bb = auth()
+        bb.repository.create(name, private=private, scm=scm)
+        yield "Home page: https://bitbucket.org/%s/%s\n" % (USERNAME, name)
+        yield "git remote add origin ssh://hg@bitbucket.org/%s/%s" % (USERNAME, name)
+        yield "git push -u origin master"
+
+
 parser = argh.ArghParser()
-parser.add_commands([list, ])
+parser.add_commands([list, create])
 
 
 if __name__ == '__main__':
