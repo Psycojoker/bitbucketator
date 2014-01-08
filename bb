@@ -31,8 +31,12 @@ def create(public=False, scm="git", *names):
         bb = auth()
         bb.repository.create(name, private=not public, scm=scm)
         yield "Home page: https://bitbucket.org/%s/%s\n" % (USERNAME, name)
-        yield "git remote add origin ssh://hg@bitbucket.org/%s/%s" % (USERNAME, name)
-        yield "git push -u origin master"
+        if scm == "git":
+            yield "git remote add origin ssh://hg@bitbucket.org/%s/%s" % (USERNAME, name)
+            yield "git push -u origin master"
+        else:
+            yield "edit .hg/hgrc to add the repos then push"
+            yield "hg push ssh://hg@bitbucket.org/%s/%s" % (USERNAME, name)
 
 
 parser = argh.ArghParser()
