@@ -1,12 +1,9 @@
 #!/usr/bin/env python
 
-import sys
 import argh
 from bitbucket.bitbucket import Bitbucket
 
 from config import USERNAME, PASSWORD
-
-o = sys.stdout
 
 
 def auth():
@@ -16,11 +13,13 @@ def auth():
 def list():
     bb = auth()
     for i in sorted(bb.repository.all()[1], key=lambda x: x["name"]):
+        to_print = ""
         if i["is_private"]:
-            o.write("\033[0;35m")
-        o.write(" %-28s" % i["name"])
-        o.write("https://bitbucket.org/%s/%s" % (USERNAME, i["name"]))
-        o.write("\033[0m\n")
+            to_print += "\033[0;35m"
+        to_print += " %-28s" % i["name"]
+        to_print += "https://bitbucket.org/%s/%s" % (USERNAME, i["name"])
+        to_print += "\033[0m"
+        yield to_print
 
 
 parser = argh.ArghParser()
